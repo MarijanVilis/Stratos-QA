@@ -1,0 +1,29 @@
+name: Cypress Tests
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: '0 10 * * *'  # Schedule for 12:00 PM daily
+        
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest
+    if: "(github.event_name == 'push' && contains(github.event.head_commit.message, 'run pipeline')) || github.event_name == 'schedule'"
+    steps:
+      - name: Conditional Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'production' || github.ref }}
+   
+      - name: Cypress run
+        uses: cypress-io/github-action@v6
+        with:
+          start: npx cypress run --record --browser chrome --headless
+          record: true
+          parallel: true
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
